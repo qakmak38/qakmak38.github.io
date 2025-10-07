@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频链接中转服务</title>
+    <style>
+        :root {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --bg-tertiary: #252525;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent: #bb86fc;
+            --accent-variant: #3700b3;
+            --success: #03dac6;
+            --warning: #cf6679;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 25% 25%, rgba(59, 0, 179, 0.1) 0%, transparent 55%);
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            position: relative;
+        }
+        
+        h1 {
+            color: var(--accent);
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px rgba(187, 134, 252, 0.4);
+        }
+        
+        .card {
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #333;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .tab.active {
+            color: var(--accent);
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--accent);
+        }
+        
+        .form-group {
+            margin-bottom: 1.25rem;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--bg-tertiary);
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(187, 134, 252, 0.2);
+        }
+        
+        button {
+            background-color: var(--accent);
+            color: #000;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            background-color: var(--accent-variant);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(187, 134, 252, 0.3);
+        }
+        
+        .result {
+            background-color: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            word-break: break-all;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .result a {
+            color: var(--success);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .result a:hover {
+            text-decoration: underline;
+        }
+        
+        .link-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 1rem;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 10px;
+            background-color: var(--bg-tertiary);
+        }
+        
+        .link-item {
+            padding: 12px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+        }
+        
+        .link-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .link-item:last-child {
+            border-bottom: none;
+        }
+        
+        .link-text {
+            flex-grow: 1;
+            margin-right: 10px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        .copy-btn {
+            background-color: var(--accent-variant);
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+            min-width: 80px;
+        }
+        
+        .input-method {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .method-btn {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background-color: var(--bg-tertiary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+        
+        .method-btn.active {
+            background-color: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+        
+        .method-btn:hover:not(.active) {
+            border-color: var(--accent);
+        }
+        
+        .input-section {
+            display: none;
+        }
+        
+        .input-section.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+        
+        .format-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .format-btn {
+            background-color: var(--accent-variant);
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 1rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background-color: var(--success);
+            color: #000;
+            border-radius: 6px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background-color: var(--warning);
+            color: #fff;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .action-buttons button {
+            flex: 1;
+        }
+        
+        .link-count {
+            margin-top: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 滚动条样式 */
+        .link-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .link-list::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+        
+        .link-list::-webkit-scrollbar-thumb {
+            background: var(--accent-variant);
+            border-radius: 4px;
+        }
+        
+        .link-list::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>视频链接中转服务</h1>
+            <p>生成可直接访问的视频中转链接</p>
+        </header>
+        
+        <div class="card">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('single')">单链接生成</button>
+                <button class="tab" onclick="switchTab('batch')">批量生成</button>
+            </div>
+            
+            <div id="singleTab">
+                <div class="form-group">
+                    <label for="videoId">视频ID</label>
+                    <input type="text" id="videoId" placeholder="输入视频ID（如：128611）">
+                </div>
+                <div class="action-buttons">
+                    <button id="generateSingleBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                        </svg>
+                        生成链接
+                    </button>
+                </div>
+                
+                <div id="singleResult">
+                    <div class="result">
+                        <p>您的中转链接：</p>
+                        <a id="proxyLink" href="#" target="_blank"></a>
+                        <div class="action-buttons">
+                            <button class="copy-btn" onclick="copyToClipboard()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                                    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                                </svg>
+                                复制链接
+                            </button>
+                            <button onclick="testLink()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M10.478 1.647a.5.5 0 1 0-.956-.294l-4 13a.5.5 0 0 0 .956.294l4-13zM4.854 4.146a.5.5 0 0 1 0 .708L1.707 8l3.147 3.146a.5.5 0 0 1-.708.708l-3.5-3.5a.5.5 0 0 1 0-.708l3.5-3.5a.5.5 0 0 1 .708 0zm6.292 0a.5.5 0 0 0 0 .708L14.293 8l-3.147 3.146a.5.5 0 0 0 .708.708l3.5-3.5a.5.5 0 0 0 0-.708l-3.5-3.5a.5.5 0 0 0-.708 0z"/>
+                                </svg>
+                                测试链接
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="batchTab">
+                <div class="input-method">
+                    <div class="method-btn active" data-method="range">ID范围</div>
+                    <div class="method-btn" data-method="list">ID列表</div>
+                </div>
+                
+                <div class="input-section active" id="rangeInput">
+                    <div class="form-group">
+                        <label for="startId">起始ID</label>
+                        <input type="number" id="startId" placeholder="输入起始ID（如：128611）" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="endId">结束ID</label>
+                        <input type="number" id="endId" placeholder="输入结束ID（如：128650）" min="1">
+                    </div>
+                </div>
+                
+                <div class="input-section" id="listInput">
+                    <div class="form-group">
+                        <label for="idList">ID列表（每行一个ID）</label>
+                        <textarea id="idList" rows="6" placeholder="每行输入一个视频ID&#10;例如：&#10;128611&#10;128612&#10;128613"></textarea>
+                        
+                        <div class="format-actions">
+                            <button class="format-btn" id="sortAscBtn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M3.5 2.5a.5.5 0 0 0-1 0v8.793l-1.146-1.147a.5.5 0 0 0-.708.708l2 1.999.007.007a.497.497 0 0 0 .7-.006l2-2a.5.5 0 0 0-.707-.708L3.5 11.293V2.5zm3.5 1a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM7.5 6a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zm0 3a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zm0 3a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1z"/>
+                                </svg>
+                                升序排序
+                            </button>
+                            <button class="format-btn" id="sortDescBtn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M3.5 12.5a.5.5 0 0 1-1 0V3.707L1.354 4.854a.5.5 0 1 1-.708-.708l2-1.999.007-.007a.498.498 0 0 1 .7.006l2 2a.5.5 0 1 1-.707.708L3.5 3.707V12.5zm3.5-9a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM7.5 6a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zm0 3a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zm0 3a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1z"/>
+                                </svg>
+                                降序排序
+                            </button>
+                            <button class="format-btn" id="removeDuplicatesBtn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                                </svg>
+                                去重
+                            </button>
+                            <button class="format-btn" id="format5DigitsBtn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M4 11a1 1 0 1 1 2 0v1a1 1 0 1 1-2 0v-1zm6-4a1 1 0 1 1 2 0v5a1 1 0 1 1-2 0V7zM7 9a1 1 0 0 1 2 0v3a1 1 0 1 1-2 0V9z"/>
+                                    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                                    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                                </svg>
+                                5位分割排序
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="generateBatchBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                        </svg>
+                        生成链接
+                    </button>
+                </div>
+                
+                <div id="batchResult">
+                    <div class="link-count">已生成 <span id="linkCount">0</span> 个链接</div>
+                    <div class="link-list" id="linkList"></div>
+                    <div class="action-buttons">
+                        <button id="copyAllBtn" class="copy-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                                <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                            </svg>
+                            一键复制所有链接
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>视频链接中转服务 &copy; 2023 - 安全高效的中转解决方案</p>
+        </footer>
+    </div>
+
+    <div class="notification" id="notification">操作成功！</div>
+
+    <script>
+        // 切换标签页
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById('singleTab').style.display = 'none';
+            document.getElementById('batchTab').style.display = 'none';
+            
+            if (tabName === 'single') {
+                document.querySelector('.tab:first-child').classList.add('active');
+                document.getElementById('singleTab').style.display = 'block';
+            } else {
+                document.querySelector('.tab:last-child').classList.add('active');
+                document.getElementById('batchTab').style.display = 'block';
+            }
+            
+            // 重置结果区域
+            document.getElementById('singleResult').style.display = 'none';
+            document.getElementById('batchResult').style.display = 'none';
+        }
+        
+        // 显示通知
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification';
+            
+            if (isError) {
+                notification.classList.add('error');
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            switchTab('single');
+            
+            // 设置输入方法按钮事件
+            document.querySelectorAll('.method-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 更新按钮状态
+                    document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 显示对应的输入区域
+                    const method = this.getAttribute('data-method');
+                    document.querySelectorAll('.input-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    document.getElementById(`${method}Input`).classList.add('active');
+                });
+            });
+            
+            // 设置单链接生成按钮事件
+            document.getElementById('generateSingleBtn').addEventListener('click', generateSingleLink);
+            
+            // 设置批量生成按钮事件
+            document.getElementById('generateBatchBtn').addEventListener('click', generateBatchLinks);
+            
+            // 设置格式化按钮事件
+            document.getElementById('sortAscBtn').addEventListener('click', sortAscending);
+            document.getElementById('sortDescBtn').addEventListener('click', sortDescending);
+            document.getElementById('removeDuplicatesBtn').addEventListener('click', removeDuplicates);
+            document.getElementById('format5DigitsBtn').addEventListener('click', format5Digits);
+            
+            // 设置一键复制所有链接按钮事件
+            document.getElementById('copyAllBtn').addEventListener('click', copyAllLinks);
+        });
+        
+        // 生成单链接
+        function generateSingleLink() {
+            const videoId = document.getElementById('videoId').value.trim();
+            
+            if (!videoId) {
+                showNotification('请输入视频ID', true);
+                return;
+            }
+            
+            if (!/^\d+$/.test(videoId)) {
+                showNotification('视频ID只能是数字', true);
+                return;
+            }
+            
+            const proxyLink = `${window.location.origin}/proxy.php?id=${videoId}`;
+            document.getElementById('proxyLink').textContent = proxyLink;
+            document.getElementById('proxyLink').href = proxyLink;
+            document.getElementById('singleResult').style.display = 'block';
+            
+            showNotification('链接已生成！');
+        }
+        
+        // 生成批量链接
+        function generateBatchLinks() {
+            const activeMethod = document.querySelector('.method-btn.active').getAttribute('data-method');
+            let idArray = [];
+            
+            if (activeMethod === 'range') {
+                // 范围输入方式
+                const startId = parseInt(document.getElementById('startId').value);
+                const endId = parseInt(document.getElementById('endId').value);
+                
+                if (isNaN(startId) || isNaN(endId)) {
+                    showNotification('请输入有效的起始ID和结束ID', true);
+                    return;
+                }
+                
+                if (startId > endId) {
+                    showNotification('起始ID不能大于结束ID', true);
+                    return;
+                }
+                
+                if (endId - startId > 1000) {
+                    showNotification('一次最多生成1000个链接', true);
+                    return;
+                }
+                
+                for (let id = startId; id <= endId; id++) {
+                    idArray.push(id);
+                }
+            } else {
+                // 列表输入方式
+                const idList = document.getElementById('idList').value.trim();
+                
+                if (!idList) {
+                    showNotification('请输入ID列表', true);
+                    return;
+                }
+                
+                // 分割ID并过滤无效值
+                idArray = idList.split('\n')
+                    .map(id => id.trim())
+                    .filter(id => id && /^\d+$/.test(id));
+                
+                if (idArray.length === 0) {
+                    showNotification('没有找到有效的ID', true);
+                    return;
+                }
+                
+                if (idArray.length > 1000) {
+                    showNotification('一次最多生成1000个链接', true);
+                    return;
+                }
+            }
+            
+            // 生成链接列表
+            const linkList = document.getElementById('linkList');
+            linkList.innerHTML = '';
+            
+            idArray.forEach(id => {
+                const proxyLink = `${window.location.origin}/proxy.php?id=${id}`;
+                
+                const linkItem = document.createElement('div');
+                linkItem.className = 'link-item';
+                linkItem.innerHTML = `
+                    <div class="link-text">${proxyLink}</div>
+                    <div class="link-actions">
+                        <button class="copy-btn" data-link="${proxyLink}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                                <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                            </svg>
+                            复制
+                        </button>
+                    </div>
+                `;
+                linkList.appendChild(linkItem);
+                
+                // 为这个链接项中的复制按钮绑定事件
+                const copyBtn = linkItem.querySelector('.copy-btn');
+                copyBtn.addEventListener('click', function() {
+                    const link = this.getAttribute('data-link');
+                    navigator.clipboard.writeText(link).then(() => {
+                        showNotification('链接已复制！');
+                    }).catch(err => {
+                        console.error('复制失败:', err);
+                        showNotification('复制失败，请手动复制', true);
+                    });
+                });
+            });
+            
+            // 更新链接计数
+            document.getElementById('linkCount').textContent = idArray.length;
+            
+            // 显示结果容器
+            document.getElementById('batchResult').style.display = 'block';
+            
+            showNotification(`已生成 ${idArray.length} 个链接！`);
+        }
+        
+        // 一键复制所有链接
+        function copyAllLinks() {
+            const links = [];
+            document.querySelectorAll('.link-text').forEach(item => {
+                const text = item.textContent.trim();
+                if (text) {
+                    links.push(text);
+                }
+            });
+            
+            if (links.length === 0) {
+                showNotification('没有可复制的链接', true);
+                return;
+            }
+            
+            const allLinks = links.join('\n');
+            navigator.clipboard.writeText(allLinks).then(() => {
+                showNotification(`所有链接已复制（共 ${links.length} 个）`);
+            }).catch(err => {
+                console.error('复制失败:', err);
+                showNotification('复制失败，请手动复制', true);
+            });
+        }
+        
+        // 复制到剪贴板
+        function copyToClipboard() {
+            const link = document.getElementById('proxyLink').textContent;
+            if (!link || link === '#') {
+                showNotification('请先生成链接', true);
+                return;
+            }
+            
+            navigator.clipboard.writeText(link).then(() => {
+                showNotification('链接已复制！');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                showNotification('复制失败，请手动复制', true);
+            });
+        }
+        
+        // 测试链接
+        function testLink() {
+            const link = document.getElementById('proxyLink').textContent;
+            if (!link || link === '#') {
+                showNotification('请先生成链接', true);
+                return;
+            }
+            
+            window.open(link, '_blank');
+        }
+        
+        // 格式化功能
+        // 升序排序
+        function sortAscending() {
+            const textarea = document.getElementById('idList');
+            let lines = textarea.value.split('\n');
+            
+            // 过滤并排序
+            const sortedLines = lines
+                .map(line => line.trim())
+                .filter(line => line && /^\d+$/.test(line))
+                .map(id => parseInt(id, 10))
+                .sort((a, b) => a - b)
+                .map(id => id.toString());
+            
+            // 更新文本框
+            textarea.value = sortedLines.join('\n');
+            showNotification('已按升序排序');
+        }
+        
+        // 降序排序
+        function sortDescending() {
+            const textarea = document.getElementById('idList');
+            let lines = textarea.value.split('\n');
+            
+            // 过滤并排序
+            const sortedLines = lines
+                .map(line => line.trim())
+                .filter(line => line && /^\d+$/.test(line))
+                .map(id => parseInt(id, 10))
+                .sort((a, b) => b - a)
+                .map(id => id.toString());
+            
+            // 更新文本框
+            textarea.value = sortedLines.join('\n');
+            showNotification('已按降序排序');
+        }
+        
+        // 去重
+        function removeDuplicates() {
+            const textarea = document.getElementById('idList');
+            let lines = textarea.value.split('\n');
+            
+            // 去重
+            const uniqueLines = [...new Set(lines.map(line => line.trim()))];
+            
+            // 更新文本框
+            textarea.value = uniqueLines.join('\n');
+            showNotification(`已移除 ${lines.length - uniqueLines.length} 个重复项`);
+        }
+        
+        // 5位分割排序功能
+        function format5Digits() {
+            const textarea = document.getElementById('idList');
+            const inputText = textarea.value;
+            
+            // 移除所有非数字字符，得到纯数字字符串
+            const digitsOnly = inputText.replace(/\D/g, '');
+            
+            // 分割成5位数字的数组
+            const fiveDigitArray = [];
+            for (let i = 0; i < digitsOnly.length; i += 5) {
+                const fiveDigit = digitsOnly.substring(i, i + 5);
+                if (fiveDigit.length > 0) {
+                    fiveDigitArray.push(fiveDigit);
+                }
+            }
+            
+            // 按数字大小升序排序
+            fiveDigitArray.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+            
+            // 更新文本框
+            textarea.value = fiveDigitArray.join('\n');
+            showNotification('已格式化为5位数字并排序');
+        }
+    </script>
+</body>
+</html>
